@@ -4,8 +4,9 @@ import '../routes/app_routes.dart';
 import '../services/attendance_calculator.dart';
 import '../utils/app_colors.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/responsive_content.dart';
 
-/// HistoryScreen shows all previous calculations performed during this app session.
+/// History screen showing the latest calculation from the current session.
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -14,186 +15,216 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  void _confirmClearHistory() {
+  void _confirmClear() {
     showDialog(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Clear Calculation History?'),
-          content: const Text(
-            'This will remove all session calculation records. Are you sure you want to proceed?',
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Clear history?'),
+        content: const Text(
+            'This will remove all session calculations. Continue?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.danger,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.danger,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(90, 40),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () {
-                setState(() {
-                  AttendanceCalculator.clearHistory();
-                });
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('History cleared successfully.'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              child: const Text('Clear'),
-            ),
-          ],
-        );
-      },
+            onPressed: () {
+              setState(() => AttendanceCalculator.clearHistory());
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('History cleared.'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final historyList = AttendanceCalculator.sessionHistory;
+    final history = AttendanceCalculator.sessionHistory;
+    final latest = history.isEmpty ? null : history.first;
 
     return Scaffold(
+      backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('Calculation History'),
+        backgroundColor: AppColors.scaffoldBackground,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'History',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+            letterSpacing: -0.3,
+          ),
+        ),
         actions: [
-          if (historyList.isNotEmpty)
+          if (history.isNotEmpty)
             IconButton(
-              tooltip: 'Clear History',
-              icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
-              onPressed: _confirmClearHistory,
+              tooltip: 'Clear history',
+              icon: const Icon(Icons.delete_outline_rounded,
+                  color: AppColors.danger),
+              onPressed: _confirmClear,
             ),
         ],
       ),
       body: SafeArea(
-        child: historyList.isEmpty
-            ? _buildEmptyState(context)
-            : ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                itemCount: historyList.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final record = historyList[index];
-                  return _buildHistoryCard(record);
-                },
-              ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.history_rounded,
-                size: 40,
-                color: AppColors.primary,
-              ),
+        top: false,
+        child: Center(
+          child: SingleChildScrollView(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: ResponsiveContent(
+              maxWidth: 520,
+              child: latest == null
+                  ? _EmptyState(
+                      onCalculate: () => Navigator.pushReplacementNamed(
+                          context, AppRoutes.input),
+                    )
+                  : _LatestCard(
+                      record: latest,
+                      onOpen: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.result,
+                        arguments: latest,
+                      ),
+                    ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'No History Yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Calculations you make during this app session will appear here for easy comparison.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 24),
-            CustomButton(
-              text: 'Calculate Attendance',
-              icon: Icons.calculate_rounded,
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.input);
-              },
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildHistoryCard(AttendanceModel record) {
-    final statusColor = record.isSafe ? AppColors.safe : AppColors.warning;
-    final statusBgColor = record.isSafe ? AppColors.safeBackground : AppColors.warningBackground;
-    final statusBorderColor = record.isSafe ? AppColors.safeBorder : AppColors.warningBorder;
+// ─── Latest calculation card ───────────────────────────────────────────────
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            AppRoutes.result,
-            arguments: record,
-          );
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
+class _LatestCard extends StatelessWidget {
+  final AttendanceModel record;
+  final VoidCallback onOpen;
+
+  const _LatestCard({required this.record, required this.onOpen});
+
+  @override
+  Widget build(BuildContext context) {
+    final isSafe = record.isSafe;
+    final statusColor = isSafe ? AppColors.safe : AppColors.warning;
+    final statusBg =
+        isSafe ? AppColors.safeBackground : AppColors.warningBackground;
+    final statusBorder =
+        isSafe ? AppColors.safeBorder : AppColors.warningBorder;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Section label
+        const Padding(
+          padding: EdgeInsets.only(bottom: 12),
+          child: Text(
+            'Latest calculation',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+
+        // Main card
+        Container(
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            color: AppColors.cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border, width: 1.2),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textPrimary.withValues(alpha: 0.05),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Timestamp & Status badge
+              // Name row + status badge
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time_rounded, size: 14, color: AppColors.textMuted),
-                      const SizedBox(width: 4),
-                      Text(
-                        record.formattedDate,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textMuted,
-                          fontWeight: FontWeight.w500,
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      isSafe
+                          ? Icons.verified_rounded
+                          : Icons.trending_up_rounded,
+                      color: statusColor,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          record.name.isNotEmpty
+                              ? record.name
+                              : 'Unnamed record',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          record.formattedDate,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusBgColor,
+                      color: statusBg,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: statusBorderColor),
+                      border:
+                          Border.all(color: statusBorder, width: 1.2),
                     ),
                     child: Text(
-                      record.isSafe ? 'SAFE' : 'ATTENTION',
+                      isSafe ? 'SAFE' : 'ATTENTION',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -203,96 +234,180 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+              const Divider(height: 1, color: AppColors.divider),
+              const SizedBox(height: 20),
 
-              // Metrics Row
+              // Metrics grid
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildMetricColumn(
+                  _MetricItem(
                     label: 'Current',
                     value: record.formattedCurrentPercentage,
                     color: statusColor,
                   ),
-                  _buildMetricColumn(
+                  _MetricItem(
                     label: 'Target',
                     value: record.formattedTargetPercentage,
                     color: AppColors.textPrimary,
                   ),
-                  _buildMetricColumn(
+                  _MetricItem(
                     label: 'Predicted',
                     value: record.formattedPredictedPercentage,
-                    color: record.canReachTarget ? AppColors.safe : AppColors.danger,
+                    color: record.canReachTarget
+                        ? AppColors.safe
+                        : AppColors.danger,
                   ),
-                  _buildMetricColumn(
-                    label: record.isSafe ? 'Can Miss' : 'Need',
-                    value: record.isSafe ? '${record.classesCanMiss}' : '${record.classesNeeded}',
-                    color: record.isSafe ? AppColors.safe : AppColors.warning,
+                  _MetricItem(
+                    label: isSafe ? 'Can Miss' : 'Need',
+                    value: isSafe
+                        ? '${record.classesCanMiss}'
+                        : '${record.classesNeeded}',
+                    color: isSafe ? AppColors.safe : AppColors.warning,
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              const Divider(height: 1, color: AppColors.divider),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
 
-              // Footer row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Classes: ${record.attendedClasses}/${record.totalClasses} conducted',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const Row(
-                    children: [
-                      Text(
-                        'Details',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                      Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.primary),
-                    ],
-                  ),
-                ],
+              // Attendance progress bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: (record.currentPercentage / 100).clamp(0.0, 1.0),
+                  minHeight: 7,
+                  backgroundColor: AppColors.divider,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(statusColor),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${record.attendedClasses} of ${record.totalClasses} classes attended',
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
+        const SizedBox(height: 20),
 
-  Widget _buildMetricColumn({
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
+        // Open full report button
+        CustomButton(
+          text: 'Open Full Report',
+          icon: Icons.open_in_new_rounded,
+          onPressed: onOpen,
+        ),
+        const SizedBox(height: 12),
+
+        CustomButton(
+          text: 'New Calculation',
+          icon: Icons.add_rounded,
+          isOutlined: true,
+          onPressed: () =>
+              Navigator.pushNamed(context, AppRoutes.input),
+        ),
+
+        // Note about session scope
+        const SizedBox(height: 24),
+        const Center(
+          child: Text(
+            'History is kept for this session only.',
+            style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textMuted,
+                fontStyle: FontStyle.italic),
           ),
         ),
-        const SizedBox(height: 2),
+      ],
+    );
+  }
+}
+
+class _MetricItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MetricItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
         Text(
           value,
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
             color: color,
           ),
         ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Empty state ───────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  final VoidCallback onCalculate;
+  const _EmptyState({required this.onCalculate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 60),
+        Container(
+          width: 72,
+          height: 72,
+          decoration: const BoxDecoration(
+            color: AppColors.primaryLight,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.history_rounded,
+              size: 36, color: AppColors.primary),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'No history yet',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Calculations you make will appear here.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.5),
+        ),
+        const SizedBox(height: 32),
+        CustomButton(
+          text: 'Calculate Attendance',
+          icon: Icons.calculate_rounded,
+          onPressed: onCalculate,
+        ),
+        const SizedBox(height: 60),
       ],
     );
   }

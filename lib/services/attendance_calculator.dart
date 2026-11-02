@@ -63,6 +63,7 @@ class AttendanceCalculator {
 
   /// Calculates attendance metrics and returns a populated [AttendanceModel].
   static AttendanceModel calculate({
+    String name = '',
     required int totalClasses,
     required int attendedClasses,
     required int absentClasses,
@@ -94,7 +95,8 @@ class AttendanceCalculator {
       // attended / (total + M) >= targetFraction
       // M <= (attended / targetFraction) - total
       if (targetFraction > 0) {
-        final double maxMissable = (attendedClasses / targetFraction) - totalClasses;
+        final double maxMissable =
+            (attendedClasses / targetFraction) - totalClasses;
         classesCanMiss = max(0, maxMissable.floor());
       }
 
@@ -117,7 +119,8 @@ class AttendanceCalculator {
             'Your target is 100%, but since you have already missed classes, '
             'reaching exactly 100% is no longer mathematically possible.';
       } else {
-        final double numerator = (targetFraction * totalClasses) - attendedClasses;
+        final double numerator =
+            (targetFraction * totalClasses) - attendedClasses;
         final double denominator = 1.0 - targetFraction;
         final double needed = numerator / denominator;
         classesNeeded = max(1, needed.ceil());
@@ -142,6 +145,7 @@ class AttendanceCalculator {
     }
 
     final record = AttendanceModel(
+      name: name.trim(),
       totalClasses: totalClasses,
       attendedClasses: attendedClasses,
       absentClasses: absentClasses,
@@ -168,4 +172,3 @@ class AttendanceCalculator {
     sessionHistory.clear();
   }
 }
-

@@ -15,8 +15,11 @@ class PredictionResult extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = attendance.isSafe ? AppColors.safe : AppColors.warning;
-    final statusBgColor = attendance.isSafe ? AppColors.safeBackground : AppColors.warningBackground;
-    final statusBorderColor = attendance.isSafe ? AppColors.safeBorder : AppColors.warningBorder;
+    final statusBgColor = attendance.isSafe
+        ? AppColors.safeBackground
+        : AppColors.warningBackground;
+    final statusBorderColor =
+        attendance.isSafe ? AppColors.safeBorder : AppColors.warningBorder;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -26,13 +29,13 @@ class PredictionResult extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(26),
             border: Border.all(color: AppColors.border, width: 1.2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: AppColors.textPrimary.withValues(alpha: 0.055),
+                blurRadius: 26,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
@@ -40,7 +43,8 @@ class PredictionResult extends StatelessWidget {
             children: [
               // Safe / Need Improvement Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: statusBgColor,
                   borderRadius: BorderRadius.circular(30),
@@ -50,7 +54,9 @@ class PredictionResult extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      attendance.isSafe ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
+                      attendance.isSafe
+                          ? Icons.check_circle_rounded
+                          : Icons.warning_amber_rounded,
                       color: statusColor,
                       size: 16,
                     ),
@@ -73,15 +79,24 @@ class PredictionResult extends StatelessWidget {
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  SizedBox(
-                    width: 150,
-                    height: 150,
-                    child: CircularProgressIndicator(
-                      value: (attendance.currentPercentage / 100.0).clamp(0.0, 1.0),
-                      strokeWidth: 12,
-                      backgroundColor: AppColors.divider,
-                      valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                      strokeCap: StrokeCap.round,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(
+                      begin: 0,
+                      end: (attendance.currentPercentage / 100.0)
+                          .clamp(0.0, 1.0),
+                    ),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, progress, child) => SizedBox(
+                      width: 150,
+                      height: 150,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 12,
+                        backgroundColor: AppColors.divider,
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                        strokeCap: StrokeCap.round,
+                      ),
                     ),
                   ),
                   Column(
@@ -118,12 +133,14 @@ class PredictionResult extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Predicted Attendance (Upcoming Classes)',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                      const Expanded(
+                        child: Text(
+                          'Predicted Attendance (Upcoming Classes)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                       Text(
@@ -131,20 +148,32 @@ class PredictionResult extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: attendance.canReachTarget ? AppColors.safe : AppColors.danger,
+                          color: attendance.canReachTarget
+                              ? AppColors.safe
+                              : AppColors.danger,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: (attendance.predictedPercentage / 100.0).clamp(0.0, 1.0),
-                      minHeight: 8,
-                      backgroundColor: AppColors.divider,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        attendance.canReachTarget ? AppColors.primary : AppColors.warning,
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(
+                        begin: 0,
+                        end: (attendance.predictedPercentage / 100.0)
+                            .clamp(0.0, 1.0)),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, progress, child) => ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 9,
+                        backgroundColor: AppColors.divider,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          attendance.canReachTarget
+                              ? AppColors.primary
+                              : AppColors.warning,
+                        ),
                       ),
                     ),
                   ),
@@ -184,10 +213,14 @@ class PredictionResult extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: attendance.isSafe ? AppColors.safeBackground : Colors.white,
+                  color: attendance.isSafe
+                      ? AppColors.safeBackground
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: attendance.isSafe ? AppColors.safeBorder : AppColors.border,
+                    color: attendance.isSafe
+                        ? AppColors.safeBorder
+                        : AppColors.border,
                     width: 1.2,
                   ),
                 ),
@@ -198,7 +231,9 @@ class PredictionResult extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.beach_access_rounded,
-                          color: attendance.isSafe ? AppColors.safe : AppColors.textMuted,
+                          color: attendance.isSafe
+                              ? AppColors.safe
+                              : AppColors.textMuted,
                           size: 20,
                         ),
                         const SizedBox(width: 6),
@@ -218,12 +253,16 @@ class PredictionResult extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: attendance.isSafe ? AppColors.safe : AppColors.textPrimary,
+                        color: attendance.isSafe
+                            ? AppColors.safe
+                            : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      attendance.isSafe ? 'classes safely' : 'No buffer available',
+                      attendance.isSafe
+                          ? 'classes safely'
+                          : 'No buffer available',
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary,
@@ -240,10 +279,14 @@ class PredictionResult extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: !attendance.isSafe ? AppColors.warningBackground : Colors.white,
+                  color: !attendance.isSafe
+                      ? AppColors.warningBackground
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: !attendance.isSafe ? AppColors.warningBorder : AppColors.border,
+                    color: !attendance.isSafe
+                        ? AppColors.warningBorder
+                        : AppColors.border,
                     width: 1.2,
                   ),
                 ),
@@ -254,7 +297,9 @@ class PredictionResult extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.trending_up_rounded,
-                          color: !attendance.isSafe ? AppColors.warning : AppColors.safe,
+                          color: !attendance.isSafe
+                              ? AppColors.warning
+                              : AppColors.safe,
                           size: 20,
                         ),
                         const SizedBox(width: 6),
@@ -274,12 +319,16 @@ class PredictionResult extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: !attendance.isSafe ? AppColors.warning : AppColors.safe,
+                        color: !attendance.isSafe
+                            ? AppColors.warning
+                            : AppColors.safe,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      attendance.isSafe ? 'Target already met' : 'classes required',
+                      attendance.isSafe
+                          ? 'Target already met'
+                          : 'classes required',
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.textSecondary,

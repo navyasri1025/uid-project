@@ -1,5 +1,8 @@
 /// Data model representing an attendance calculation and prediction record.
 class AttendanceModel {
+  /// User-provided label used to identify this attendance record.
+  final String name;
+
   /// Total classes conducted so far.
   final int totalClasses;
 
@@ -40,6 +43,7 @@ class AttendanceModel {
   final DateTime timestamp;
 
   const AttendanceModel({
+    this.name = '',
     required this.totalClasses,
     required this.attendedClasses,
     required this.absentClasses,
@@ -56,13 +60,16 @@ class AttendanceModel {
   });
 
   /// Formatted current percentage as string with 2 decimal places.
-  String get formattedCurrentPercentage => '${currentPercentage.toStringAsFixed(1)}%';
+  String get formattedCurrentPercentage =>
+      '${currentPercentage.toStringAsFixed(1)}%';
 
   /// Formatted predicted percentage as string with 2 decimal places.
-  String get formattedPredictedPercentage => '${predictedPercentage.toStringAsFixed(1)}%';
+  String get formattedPredictedPercentage =>
+      '${predictedPercentage.toStringAsFixed(1)}%';
 
   /// Formatted target percentage as string.
-  String get formattedTargetPercentage => '${targetPercentage.toStringAsFixed(1)}%';
+  String get formattedTargetPercentage =>
+      '${targetPercentage.toStringAsFixed(1)}%';
 
   /// Formatted date and time for history display.
   String get formattedDate {
@@ -74,4 +81,3 @@ class AttendanceModel {
     return '$day/$month/$year $hour:$minute';
   }
 }
-

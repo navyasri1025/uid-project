@@ -38,10 +38,12 @@ class CustomButton extends StatelessWidget {
               width: 1.5,
             ),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
           ),
-          child: _buildChild(context, textColor ?? (backgroundColor ?? AppColors.primary)),
+          child: _buildChild(
+              context, textColor ?? (backgroundColor ?? AppColors.primary)),
         ),
       );
     }
@@ -55,9 +57,11 @@ class CustomButton extends StatelessWidget {
           backgroundColor: backgroundColor ?? AppColors.primary,
           foregroundColor: textColor ?? Colors.white,
           elevation: 0,
+          shadowColor: AppColors.primary.withValues(alpha: 0.25),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(16),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
         ),
         child: _buildChild(context, textColor ?? Colors.white),
       ),
@@ -104,4 +108,3 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
-
